@@ -84,7 +84,7 @@ func (s *Server) Execute(ctx context.Context, req Request) Response {
 	key := methodKey(req.Service, req.Method)
 	method, has := s.methods[key]
 	if !has {
-		return errorResp(NotFound, "method "+key+" not found")
+		return ErrorResponsef(NotFound, "method %s not found", key)
 	}
 
 	call := CallInfo{
@@ -101,7 +101,7 @@ func (s *Server) Execute(ctx context.Context, req Request) Response {
 	resp, err := s.intercept(ctx, call, method.handler)
 	cancel()
 	if err != nil {
-		return errorResp(ErrorCode(err), err.Error())
+		return ErrorResponse(err)
 	}
 	return Response{Body: resp}
 }
@@ -119,7 +119,7 @@ func (s *Server) ServeMRPC(ctx context.Context, r io.Reader, w io.Writer) error 
 	if err := msgpack.Decode(r, &req); err == nil {
 		resp = s.Execute(ctx, req)
 	} else {
-		resp = errorResp(Unknown, "decode request: "+err.Error())
+		resp = ErrorResponsef(Unknown, "decode request: %s", err.Error())
 	}
 	return msgpack.Encode(w, &resp)
 }
@@ -127,10 +127,6 @@ func (s *Server) ServeMRPC(ctx context.Context, r io.Reader, w io.Writer) error 
 type method struct {
 	svc     interface{}
 	handler Handler
-}
-
-func errorResp(code ErrCode, text string) Response {
-	return Response{ErrorCode: code, ErrorText: text}
 }
 
 func methodKey(svc string, method int) string {

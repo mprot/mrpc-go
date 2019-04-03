@@ -40,6 +40,15 @@ func ResponseError(resp Response) error {
 	return Error(resp.ErrorCode, resp.ErrorText)
 }
 
+// ErrorResponse returns a response which indicates the given error.
+func ErrorResponse(err error) Response {
+	return Response{ErrorCode: ErrorCode(err), ErrorText: err.Error()}
+}
+
+func ErrorResponsef(code ErrCode, format string, args ...interface{}) Response {
+	return Response{ErrorCode: code, ErrorText: fmt.Sprintf(format, args...)}
+}
+
 type codeError struct {
 	code ErrCode
 	text string
